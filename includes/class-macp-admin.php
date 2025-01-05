@@ -17,26 +17,34 @@ class MACP_Admin {
     private function init_hooks() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this->assets_handler, 'enqueue_admin_assets']);
+        
+        // Add AJAX handler for unused CSS test
+        add_action('wp_ajax_macp_test_unused_css', [$this, 'ajax_test_unused_css']);
     }
   
   
   public function ajax_test_unused_css() {
-    check_ajax_referer('macp_admin_nonce', 'nonce');
+        // Verify nonce
+        if (!check_ajax_referer('macp_admin_nonce', 'nonce', false)) {
+            wp_send_json_error('Invalid security token');
+        }
 
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error('Unauthorized');
-    }
+        // Verify user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized access');
+        }
 
-    $url = isset($_POST['url']) ? esc_url_raw($_POST['url']) : home_url('/');
-    
-    try {
-        $css_optimizer = new MACP_CSS_Optimizer();
-        $results = $css_optimizer->test_unused_css($url);
-        wp_send_json_success($results);
-    } catch (Exception $e) {
-        wp_send_json_error($e->getMessage());
+        // Get and validate URL
+        $url = isset($_POST['url']) ? esc_url_raw($_POST['url']) : home_url('/');
+        
+        try {
+            $css_optimizer = new MACP_CSS_Optimizer();
+            $results = $css_optimizer->test_unused_css($url);
+            wp_send_json_success($results);
+        } catch (Exception $e) {
+            wp_send_json_error($e->getMessage());
+        }
     }
-}
 
     public function add_admin_menu() {
         // Add main menu

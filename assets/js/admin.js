@@ -92,8 +92,8 @@ jQuery(document).ready(function($) {
         });
     });
 
-    // Add handler for unused CSS test
-    $('#test-unused-css').on('click', function() {
+    
+   $('#test-unused-css').on('click', function() {
         const $button = $(this);
         const $results = $('#test-results');
         const $status = $('.test-status');
@@ -115,12 +115,13 @@ jQuery(document).ready(function($) {
                 nonce: macp_admin.nonce
             },
             success: function(response) {
+                console.log('Response:', response); // Debug log
+                
                 if (response.success) {
                     $status
                         .addClass('success')
                         .html(`Successfully analyzed CSS for <strong>${testUrl}</strong>`);
                     
-                    // Add results to table
                     response.data.forEach(function(result) {
                         const reduction = ((result.originalSize - result.optimizedSize) / result.originalSize * 100).toFixed(1);
                         const row = `
@@ -142,10 +143,11 @@ jQuery(document).ready(function($) {
                         .html(`Error: ${response.data}`);
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', {xhr, status, error}); // Debug log
                 $status
                     .addClass('error')
-                    .html('Failed to test unused CSS removal. Please try again.');
+                    .html(`Failed to test unused CSS removal. Server Error: ${error}`);
             },
             complete: function() {
                 $button.prop('disabled', false).text('Test Unused CSS Removal');
@@ -161,7 +163,10 @@ jQuery(document).ready(function($) {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-
+});
+  
+  
+  
     // Handle clear cache button
     $('.macp-clear-cache').on('click', function(e) {
         e.preventDefault();

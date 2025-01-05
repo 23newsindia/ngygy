@@ -13,3 +13,4 @@ class MACP_CSS_Optimizer {
         return trim($css);
     }
 }
+

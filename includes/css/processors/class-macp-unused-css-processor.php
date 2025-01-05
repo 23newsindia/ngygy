@@ -1,26 +1,49 @@
 <?php
 class MACP_Unused_CSS_Processor {
-    private $css_extractor;
-    private $safelist;
+    public function process($css, $html) {
+        if (empty($css) || empty($html)) {
+            return $css;
+        }
 
-    public function __construct() {
-        $this->css_extractor = new MACP_CSS_Extractor();
-        $this->safelist = MACP_CSS_Config::get_safelist();
+        $used_selectors = $this->extract_used_selectors($html);
+        return $this->filter_css($css, $used_selectors);
     }
 
-    public function process($css_content, $html) {
-        $used_selectors = $this->css_extractor->extract_used_selectors($html);
-        return $this->filter_css($css_content, $used_selectors);
+    private function extract_used_selectors($html) {
+        $selectors = [];
+        $dom = new DOMDocument();
+        @$dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        
+        $xpath = new DOMXPath($dom);
+        $elements = $xpath->query('//*');
+        
+        foreach ($elements as $element) {
+            $selectors[] = strtolower($element->tagName);
+            
+            if ($element->hasAttribute('class')) {
+                foreach (explode(' ', $element->getAttribute('class')) as $class) {
+                    if (!empty($class)) {
+                        $selectors[] = '.' . trim($class);
+                    }
+                }
+            }
+            
+            if ($element->hasAttribute('id')) {
+                $selectors[] = '#' . $element->getAttribute('id');
+            }
+        }
+        
+        return array_unique($selectors);
     }
 
     private function filter_css($css, $used_selectors) {
         $filtered = '';
+        $safelist = MACP_CSS_Config::get_safelist();
         
-        // Split CSS into rules
         preg_match_all('/([^{]+){[^}]*}/s', $css, $matches);
         
         foreach ($matches[0] as $rule) {
-            if ($this->should_keep_rule($rule, $used_selectors)) {
+            if ($this->should_keep_rule($rule, $used_selectors, $safelist)) {
                 $filtered .= $rule . "\n";
             }
         }
@@ -28,19 +51,15 @@ class MACP_Unused_CSS_Processor {
         return $filtered;
     }
 
-    private function should_keep_rule($rule, $used_selectors) {
+    private function should_keep_rule($rule, $used_selectors, $safelist) {
         $selectors = explode(',', trim(preg_replace('/\s*{.*$/s', '', $rule)));
         
         foreach ($selectors as $selector) {
             $selector = trim($selector);
             
-            // Keep if in safelist
-            if ($this->is_safelisted($selector)) {
-                return true;
-            }
-            
-            // Keep if used in HTML
-            if ($this->is_selector_used($selector, $used_selectors)) {
+            if ($this->is_essential_selector($selector) || 
+                $this->is_in_safelist($selector, $safelist) ||
+                $this->is_selector_used($selector, $used_selectors)) {
                 return true;
             }
         }
@@ -48,18 +67,16 @@ class MACP_Unused_CSS_Processor {
         return false;
     }
 
-    private function is_safelisted($selector) {
-        // Always keep essential selectors
-        if (in_array($selector, ['html', 'body', '*']) || strpos($selector, '@') === 0) {
-            return true;
-        }
+    private function is_essential_selector($selector) {
+        return in_array($selector, ['html', 'body', '*']) || strpos($selector, '@') === 0;
+    }
 
-        foreach ($this->safelist as $pattern) {
+    private function is_in_safelist($selector, $safelist) {
+        foreach ($safelist as $pattern) {
             if (fnmatch($pattern, $selector)) {
                 return true;
             }
         }
-
         return false;
     }
 

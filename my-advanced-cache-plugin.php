@@ -54,6 +54,13 @@ require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-minifier.php';
 require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-optimizer.php';
 
 
+
+// Load CSS processing classes in correct order
+require_once MACP_PLUGIN_DIR . 'includes/css/processors/class-macp-css-minifier-processor.php';
+require_once MACP_PLUGIN_DIR . 'includes/css/processors/class-macp-unused-css-processor.php';
+
+
+
 // Then load the test classes
 require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-controller.php';
 require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-url-validator.php';

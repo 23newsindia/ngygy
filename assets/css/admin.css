@@ -10,6 +10,54 @@
     vertical-align: middle;
 }
 
+/* Test Results Styling */
+.test-status {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.test-status.success {
+    background-color: #dff0d8;
+    border: 1px solid #d6e9c6;
+    color: #3c763d;
+}
+
+.test-status.error {
+    background-color: #f2dede;
+    border: 1px solid #ebccd1;
+    color: #a94442;
+}
+
+.results-table-wrap {
+    overflow-x: auto;
+}
+
+.results-table-wrap table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.results-table-wrap th,
+.results-table-wrap td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.results-table-wrap tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.file-status.success {
+    color: #46b450;
+}
+
+.file-status.error {
+    color: #dc3232;
+}
+
+
 /* Dashboard Layout */
 .macp-dashboard-wrap {
     display: grid;

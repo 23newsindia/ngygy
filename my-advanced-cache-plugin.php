@@ -21,6 +21,14 @@ require_once MACP_PLUGIN_DIR . 'includes/class-macp-debug.php';
 require_once MACP_PLUGIN_DIR . 'includes/class-macp-filesystem.php';
 require_once MACP_PLUGIN_DIR . 'includes/class-macp-url-helper.php';
 
+
+// Add to the existing requires section:
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-controller.php';
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-url-validator.php';
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-results.php';
+
+
+
 // Load Redis classes
 require_once MACP_PLUGIN_DIR . 'includes/redis/class-macp-redis-connection.php';
 require_once MACP_PLUGIN_DIR . 'includes/redis/class-macp-redis-status.php';

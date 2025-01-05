@@ -20,10 +20,8 @@ jQuery(document).ready(function($) {
             });
         }, 1000); // Save after 1 second of no typing
     });
-  
-  
-  
-   $('.macp-toggle input[name="macp_enable_lazy_load"]').on('change', function() {
+
+    $('.macp-toggle input[name="macp_enable_lazy_load"]').on('change', function() {
         const $checkbox = $(this);
         const value = $checkbox.prop('checked') ? 1 : 0;
 
@@ -50,10 +48,7 @@ jQuery(document).ready(function($) {
                 $checkbox.prop('disabled', false);
             }
         });
-  });
-  
-  
-  
+    });
 
     // Handle toggle switches
     $('.macp-toggle input[type="checkbox"]').on('change', function() {
@@ -97,6 +92,76 @@ jQuery(document).ready(function($) {
         });
     });
 
+    // Add handler for unused CSS test
+    $('#test-unused-css').on('click', function() {
+        const $button = $(this);
+        const $results = $('#test-results');
+        const $status = $('.test-status');
+        const $resultsBody = $('.results-body');
+        const testUrl = $('#test-url').val() || window.location.origin;
+
+        // Reset and show loading
+        $button.prop('disabled', true).text('Testing...');
+        $status.removeClass('success error').empty();
+        $resultsBody.empty();
+        $results.show();
+
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'macp_test_unused_css',
+                url: testUrl,
+                nonce: macp_admin.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    $status
+                        .addClass('success')
+                        .html(`Successfully analyzed CSS for <strong>${testUrl}</strong>`);
+                    
+                    // Add results to table
+                    response.data.forEach(function(result) {
+                        const reduction = ((result.originalSize - result.optimizedSize) / result.originalSize * 100).toFixed(1);
+                        const row = `
+                            <tr>
+                                <td>${result.file}</td>
+                                <td>${formatBytes(result.originalSize)}</td>
+                                <td>${formatBytes(result.optimizedSize)}</td>
+                                <td>${reduction}%</td>
+                                <td class="file-status ${result.success ? 'success' : 'error'}">
+                                    ${result.success ? '✓ Optimized' : '✗ Failed'}
+                                </td>
+                            </tr>
+                        `;
+                        $resultsBody.append(row);
+                    });
+                } else {
+                    $status
+                        .addClass('error')
+                        .html(`Error: ${response.data}`);
+                }
+            },
+            error: function() {
+                $status
+                    .addClass('error')
+                    .html('Failed to test unused CSS removal. Please try again.');
+            },
+            complete: function() {
+                $button.prop('disabled', false).text('Test Unused CSS Removal');
+            }
+        });
+    });
+
+    // Helper function to format bytes
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
     // Handle clear cache button
     $('.macp-clear-cache').on('click', function(e) {
         e.preventDefault();
@@ -127,4 +192,4 @@ jQuery(document).ready(function($) {
             }
         });
     });
-});
+}); // Closing jQuery(document).ready

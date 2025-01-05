@@ -18,6 +18,25 @@ class MACP_Admin {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this->assets_handler, 'enqueue_admin_assets']);
     }
+  
+  
+  public function ajax_test_unused_css() {
+    check_ajax_referer('macp_admin_nonce', 'nonce');
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Unauthorized');
+    }
+
+    $url = isset($_POST['url']) ? esc_url_raw($_POST['url']) : home_url('/');
+    
+    try {
+        $css_optimizer = new MACP_CSS_Optimizer();
+        $results = $css_optimizer->test_unused_css($url);
+        wp_send_json_success($results);
+    } catch (Exception $e) {
+        wp_send_json_error($e->getMessage());
+    }
+}
 
     public function add_admin_menu() {
         // Add main menu

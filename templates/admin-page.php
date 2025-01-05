@@ -11,6 +11,35 @@ $redis_info = $redis_status->get_status();
         <img src="<?php echo plugins_url('assets/images/logo.png', MACP_PLUGIN_FILE); ?>" alt="Cache Plugin Logo" class="macp-logo">
         Advanced Cache Settings
     </h1>
+  
+<!-- Add Test Unused CSS Button and Results UI -->
+    <div class="macp-card" style="margin-bottom: 20px;">
+        <h2>Test Unused CSS Removal</h2>
+        <div class="macp-test-controls">
+            <input type="url" id="test-url" class="regular-text" placeholder="Enter URL to test (leave empty for homepage)" style="margin-right: 10px;">
+            <button type="button" id="test-unused-css" class="button button-primary">Test Unused CSS Removal</button>
+        </div>
+        
+        <div id="test-results" style="display: none; margin-top: 15px;">
+            <h3>Test Results</h3>
+            <div class="test-status"></div>
+            <div class="results-table-wrap" style="margin-top: 10px;">
+                <table class="widefat">
+                    <thead>
+                        <tr>
+                            <th>CSS File</th>
+                            <th>Original Size</th>
+                            <th>Optimized Size</th>
+                            <th>Reduction</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="results-body"></tbody>
+                </table>
+            </div>
+        </div>
+  </div>
+  
 
     <div class="macp-dashboard-wrap">
         <!-- Status Card -->

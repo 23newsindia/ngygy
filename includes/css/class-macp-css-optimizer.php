@@ -17,6 +17,80 @@ class MACP_CSS_Optimizer {
     }
   
   
+  public function test_unused_css($url) {
+    // Get the page HTML
+    $response = wp_remote_get($url);
+    if (is_wp_error($response)) {
+        throw new Exception('Failed to fetch URL: ' . $response->get_error_message());
+    }
+
+    $html = wp_remote_retrieve_body($response);
+    if (empty($html)) {
+        throw new Exception('Empty response from URL');
+    }
+
+    // Extract all CSS files
+    $css_files = $this->extract_css_files($html);
+    $results = [];
+
+    foreach ($css_files as $css_file) {
+        try {
+            // Get original CSS content
+            $original_css = $this->get_stylesheet_content($css_file);
+            if (!$original_css) {
+                continue;
+            }
+
+            $original_size = strlen($original_css);
+
+            // Process CSS
+            $optimized_css = $this->unused_processor->process($original_css, $html);
+            $optimized_size = strlen($optimized_css);
+
+            $results[] = [
+                'file' => $css_file,
+                'originalSize' => $original_size,
+                'optimizedSize' => $optimized_size,
+                'success' => true
+            ];
+        } catch (Exception $e) {
+            $results[] = [
+                'file' => $css_file,
+                'originalSize' => 0,
+                'optimizedSize' => 0,
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    return $results;
+}
+
+private function extract_css_files($html) {
+    $css_files = [];
+    
+    // Match all CSS file links
+    if (preg_match_all('/<link[^>]*rel=["\']stylesheet["\'][^>]*href=["\']([^"\']+)["\']/', $html, $matches)) {
+        $css_files = $matches[1];
+    }
+
+    // Convert relative URLs to absolute
+    foreach ($css_files as &$file) {
+        if (strpos($file, '//') === 0) {
+            $file = 'https:' . $file;
+        } elseif (strpos($file, '/') === 0) {
+            $file = home_url($file);
+        }
+    }
+
+    return array_unique($css_files);
+}
+  
+  
+  
+  
+  
     public function process_stylesheet($tag, $handle, $href, $media) {
         if (!$this->should_process($href)) {
             return $tag;

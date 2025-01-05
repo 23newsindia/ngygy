@@ -45,14 +45,13 @@ require_once MACP_PLUGIN_DIR . 'includes/minify/class-macp-minify-css.php';
 require_once MACP_PLUGIN_DIR . 'includes/minify/class-macp-minify-js.php';
 require_once MACP_PLUGIN_DIR . 'includes/minify/class-macp-minify-html.php';
 
+
 // Load CSS optimization classes first
 require_once MACP_PLUGIN_DIR . 'includes/css/utils/class-macp-css-patterns.php';
-require_once MACP_PLUGIN_DIR . 'includes/css/utils/class-macp-css-optimizer.php';
 require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-config.php';
 require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-extractor.php';
 require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-minifier.php';
-// require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-optimizer.php'; // Add this line
-
+require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-optimizer.php';
 
 
 // Then load the test classes

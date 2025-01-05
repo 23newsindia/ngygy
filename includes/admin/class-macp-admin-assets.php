@@ -24,7 +24,7 @@ class MACP_Admin_Assets {
         );
 
         // Add localized script data
-        wp_localize_script('macp-admin', 'macp_admin', [
+        wp_localize_script('macp-admin', 'macpAdmin', [
             'nonce' => wp_create_nonce('macp_admin_nonce'),
             'ajaxurl' => admin_url('admin-ajax.php')
         ]);

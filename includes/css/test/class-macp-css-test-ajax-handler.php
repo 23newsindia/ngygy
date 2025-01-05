@@ -1,6 +1,11 @@
 <?php
 class MACP_CSS_Test_Ajax_Handler {
+    private $optimizer;
+    private $url_validator;
+
     public function __construct() {
+        $this->optimizer = new MACP_CSS_Optimizer();
+        $this->url_validator = new MACP_URL_Validator();
         add_action('wp_ajax_macp_test_unused_css', [$this, 'handle_test_request']);
     }
 
@@ -21,24 +26,23 @@ class MACP_CSS_Test_Ajax_Handler {
             // Get and validate URL
             $url = isset($_POST['url']) ? esc_url_raw($_POST['url']) : home_url('/');
             
-            // Validate URL
-            if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            if (!$this->url_validator->is_valid_url($url)) {
                 wp_send_json_error('Invalid URL provided');
                 return;
             }
 
-            // Initialize CSS optimizer
-            $optimizer = new MACP_CSS_Optimizer();
-            
-            // Get the test results
-            $results = $optimizer->test_unused_css($url);
+            // Run the test
+            $results = $this->optimizer->test_unused_css($url);
             
             if (empty($results)) {
                 wp_send_json_error('No CSS files found to analyze');
                 return;
             }
 
-            wp_send_json_success($results);
+            wp_send_json_success([
+                'url' => $url,
+                'results' => $results
+            ]);
 
         } catch (Exception $e) {
             error_log('MACP CSS Test Error: ' . $e->getMessage());

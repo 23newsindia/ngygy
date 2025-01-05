@@ -16,6 +16,16 @@ if (file_exists(MACP_PLUGIN_DIR . 'vendor/autoload.php')) {
     require_once MACP_PLUGIN_DIR . 'vendor/autoload.php';
 }
 
+
+
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-ajax-handler.php';
+require_once MACP_PLUGIN_DIR . 'includes/css/utils/class-macp-url-validator.php';
+
+
+// Initialize CSS Test Ajax Handler in the plugin's init method
+$css_test_handler = new MACP_CSS_Test_Ajax_Handler();
+
+
 // Load utility classes first
 require_once MACP_PLUGIN_DIR . 'includes/class-macp-debug.php';
 require_once MACP_PLUGIN_DIR . 'includes/class-macp-filesystem.php';

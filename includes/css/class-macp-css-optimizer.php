@@ -15,37 +15,33 @@ class MACP_CSS_Optimizer {
             return $html;
         }
 
-        $is_mobile = wp_is_mobile();
-        
-        // Try to get cached used CSS
-        $used_css = $this->used_css_manager->get_used_css($url, $is_mobile);
-        if ($used_css) {
-            return $this->inject_used_css($html, $used_css);
-        }
-
-        // Extract all CSS
+        // Extract all CSS first
         $all_css = $this->extract_all_css($html);
         if (empty($all_css)) {
             return $html;
         }
 
-        // Generate used CSS
-        $used_css = $this->css_extractor->extract_used_css($html, $all_css);
+        // Extract used selectors from HTML
+        $used_selectors = $this->css_extractor->extract_used_selectors($html);
         
-        // Save used CSS
-        $this->used_css_manager->save_used_css($url, $used_css, $is_mobile);
+        // Filter CSS to keep only used rules
+        $used_css = $this->filter_css($all_css, $used_selectors);
 
-        // Remove original CSS and inject optimized CSS
-        return $this->inject_used_css($html, $used_css);
+        // Remove original CSS links and inject optimized CSS
+        $html = $this->remove_original_css($html);
+        $html = $this->inject_optimized_css($html, $used_css);
+
+        // Save for caching
+        $this->used_css_manager->save_used_css($url, $used_css, wp_is_mobile());
+
+        return $html;
     }
 
     private function should_process() {
-        // Don't process admin pages
-        if (is_admin()) {
+        if (is_admin() || is_customize_preview()) {
             return false;
         }
 
-        // Don't process if option is disabled
         if (!get_option('macp_remove_unused_css', 0)) {
             return false;
         }
@@ -63,10 +59,10 @@ class MACP_CSS_Optimizer {
         }
 
         // Extract external CSS
-        preg_match_all('/<link[^>]*rel=[\'"]stylesheet[\'"][^>]*href=[\'"]([^\'"]+)[\'"][^>]*>/', $html, $matches);
+        preg_match_all('/<link[^>]*rel=[\'"]stylesheet[\'"][^>]*href=[\'"]([^\'"]+)[\'"][^>]*>/i', $html, $matches);
         if (!empty($matches[1])) {
-            foreach ($matches[1] as $url) {
-                $content = $this->get_external_css($url);
+            foreach ($matches[1] as $stylesheet) {
+                $content = $this->get_external_css($stylesheet);
                 if ($content) {
                     $css .= "\n" . $content;
                 }
@@ -77,24 +73,112 @@ class MACP_CSS_Optimizer {
     }
 
     private function get_external_css($url) {
+        // Handle protocol-relative URLs
+        if (strpos($url, '//') === 0) {
+            $url = 'https:' . $url;
+        }
+
         $response = wp_remote_get($url);
         if (is_wp_error($response)) {
             return false;
         }
-        return wp_remote_retrieve_body($response);
+
+        $css = wp_remote_retrieve_body($response);
+        
+        // Convert relative URLs to absolute
+        $css = $this->convert_relative_urls($css, $url);
+        
+        return $css;
     }
 
-    private function inject_used_css($html, $used_css) {
-        // Remove existing CSS
-        $html = preg_replace('/<link[^>]*rel=[\'"]stylesheet[\'"][^>]*>/', '', $html);
-        $html = preg_replace('/<style[^>]*>.*?<\/style>/s', '', $html);
+    private function convert_relative_urls($css, $base_url) {
+        // Convert relative URLs to absolute
+        return preg_replace_callback('/url\([\'"]?([^\'"\)]+)[\'"]?\)/i', function($matches) use ($base_url) {
+            $url = $matches[1];
+            
+            // Skip if already absolute
+            if (preg_match('/^(https?:\/\/|data:)/i', $url)) {
+                return $matches[0];
+            }
 
-        // Inject optimized CSS
+            // Convert relative to absolute
+            $absolute_url = $this->make_absolute_url($url, $base_url);
+            return 'url("' . $absolute_url . '")';
+        }, $css);
+    }
+
+    private function make_absolute_url($url, $base_url) {
+        $base_parts = parse_url($base_url);
+        
+        // Handle root-relative URLs
+        if (strpos($url, '/') === 0) {
+            return $base_parts['scheme'] . '://' . $base_parts['host'] . $url;
+        }
+        
+        // Handle relative URLs
+        $base_dir = dirname($base_parts['path']);
+        if ($base_dir !== '/') {
+            $base_dir .= '/';
+        }
+        
+        return $base_parts['scheme'] . '://' . $base_parts['host'] . $base_dir . $url;
+    }
+
+    private function filter_css($css, $used_selectors) {
+        $filtered = '';
+        
+        // Split CSS into rules
+        preg_match_all('/([^{]+){[^}]*}/s', $css, $matches);
+        
+        foreach ($matches[0] as $rule) {
+            $selectors = trim(preg_replace('/\s*{.*$/s', '', $rule));
+            $selectors = explode(',', $selectors);
+            
+            foreach ($selectors as $selector) {
+                $selector = trim($selector);
+                if ($this->is_selector_used($selector, $used_selectors)) {
+                    $filtered .= $rule . "\n";
+                    break;
+                }
+            }
+        }
+        
+        return $filtered;
+    }
+
+    private function is_selector_used($selector, $used_selectors) {
+        // Always keep essential selectors
+        if (in_array($selector, ['html', 'body', '*'])) {
+            return true;
+        }
+
+        // Check if selector matches any used selectors
+        foreach ($used_selectors as $used_selector) {
+            if (strpos($used_selector, $selector) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function remove_original_css($html) {
+        // Remove link tags
+        $html = preg_replace('/<link[^>]*rel=[\'"]stylesheet[\'"][^>]*>/i', '', $html);
+        
+        // Remove style tags
+        $html = preg_replace('/<style[^>]*>.*?<\/style>/s', '', $html);
+        
+        return $html;
+    }
+
+    private function inject_optimized_css($html, $css) {
         $css_tag = sprintf(
-            '<style id="macp-used-css">%s</style>',
-            $used_css
+            '<style id="macp-optimized-css">%s</style>',
+            $css
         );
 
+        // Inject before </head>
         return preg_replace('/<\/head>/', $css_tag . '</head>', $html);
     }
 }

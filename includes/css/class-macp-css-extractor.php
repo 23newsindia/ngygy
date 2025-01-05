@@ -1,66 +1,50 @@
 <?php
 class MACP_CSS_Extractor {
-    private $excluded_selectors = [
-        'html', 'body', ':root',
-        '.wp-*', '.has-*', '.is-*',
-        '.admin-bar', '.logged-in'
-    ];
+    private $selector_parser;
 
-    public function extract_used_css($html, $css) {
-        // Create a new DOMDocument
-        $dom = new DOMDocument();
-        @$dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-        
-        // Get all elements
-        $xpath = new DOMXPath($dom);
-        $elements = $xpath->query('//*');
-
-        // Extract all used classes and IDs
-        $used_selectors = [];
-        foreach ($elements as $element) {
-            // Get element tag
-            $used_selectors[] = $element->tagName;
-            
-            // Get classes
-            if ($element->hasAttribute('class')) {
-                $classes = explode(' ', $element->getAttribute('class'));
-                foreach ($classes as $class) {
-                    if ($class = trim($class)) {
-                        $used_selectors[] = '.' . $class;
-                    }
-                }
-            }
-            
-            // Get ID
-            if ($element->hasAttribute('id')) {
-                $used_selectors[] = '#' . $element->getAttribute('id');
-            }
-        }
-
-        // Add excluded selectors
-        $used_selectors = array_merge($used_selectors, $this->excluded_selectors);
-        
-        // Parse CSS and keep only used selectors
-        return $this->filter_css($css, array_unique($used_selectors));
+    public function __construct() {
+        $this->selector_parser = new MACP_CSS_Selector_Parser();
     }
 
-    private function filter_css($css, $used_selectors) {
-        // Basic CSS parser
-        preg_match_all('/([^{]+){[^}]*}/', $css, $matches);
-        
-        $filtered_css = '';
-        foreach ($matches[0] as $rule) {
-            $selector = trim(preg_replace('/\s*{.*$/s', '', $rule));
-            
-            // Check if selector is used
-            foreach ($used_selectors as $used_selector) {
-                if (strpos($selector, $used_selector) !== false) {
-                    $filtered_css .= $rule . "\n";
-                    break;
+    public function extract_used_selectors($html) {
+        // Parse HTML
+        $this->selector_parser->parse_html($html);
+
+        // Get all CSS
+        $css = $this->get_all_css($html);
+
+        // Find used selectors
+        return $this->selector_parser->find_used_selectors($css);
+    }
+
+    private function get_all_css($html) {
+        $css = '';
+
+        // Get inline styles
+        preg_match_all('/<style[^>]*>(.*?)<\/style>/s', $html, $matches);
+        if (!empty($matches[1])) {
+            $css .= implode("\n", $matches[1]);
+        }
+
+        // Get external stylesheets
+        preg_match_all('/<link[^>]*rel=[\'"]stylesheet[\'"][^>]*href=[\'"]([^\'"]+)[\'"][^>]*>/i', $html, $matches);
+        if (!empty($matches[1])) {
+            foreach ($matches[1] as $url) {
+                $content = $this->get_external_css($url);
+                if ($content) {
+                    $css .= "\n" . $content;
                 }
             }
         }
 
-        return $filtered_css;
+        return $css;
+    }
+
+    public static function get_external_css($url) {
+        $response = wp_remote_get($url);
+        if (!is_wp_error($response)) {
+            return wp_remote_retrieve_body($response);
+        }
+        return false;
     }
 }

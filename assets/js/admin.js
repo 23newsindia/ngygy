@@ -7,7 +7,7 @@ jQuery(document).ready(function($) {
         textareaTimeout = setTimeout(function() {
             const option = $textarea.attr('name');
             const value = $textarea.val();
-            
+
             $.ajax({
                 url: ajaxurl,
                 type: 'POST',
@@ -21,36 +21,7 @@ jQuery(document).ready(function($) {
         }, 1000); // Save after 1 second of no typing
     });
 
-    $('.macp-toggle input[name="macp_enable_lazy_load"]').on('change', function() {
-        const $checkbox = $(this);
-        const value = $checkbox.prop('checked') ? 1 : 0;
-
-        $checkbox.prop('disabled', true);
-
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'macp_toggle_setting',
-                option: 'macp_enable_lazy_load',
-                value: value,
-                nonce: macp_admin.nonce
-            },
-            success: function(response) {
-                if (!response.success) {
-                    $checkbox.prop('checked', !value);
-                }
-            },
-            error: function() {
-                $checkbox.prop('checked', !value);
-            },
-            complete: function() {
-                $checkbox.prop('disabled', false);
-            }
-        });
-    });
-
-    // Handle toggle switches
+    // Handle toggle switches for specific options
     $('.macp-toggle input[type="checkbox"]').on('change', function() {
         const $checkbox = $(this);
         const option = $checkbox.attr('name');
@@ -70,30 +41,27 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
-                    // Update status indicator if this is the cache toggle
+                    // Update status indicator for cache toggle
                     if (option === 'macp_enable_html_cache') {
                         $('.macp-status-indicator')
                             .toggleClass('active inactive')
                             .text(value ? 'Cache Enabled' : 'Cache Disabled');
                     }
                 } else {
-                    // Revert the checkbox if save failed
-                    $checkbox.prop('checked', !value);
+                    $checkbox.prop('checked', !value); // Revert on failure
                 }
             },
             error: function() {
-                // Revert the checkbox on error
-                $checkbox.prop('checked', !value);
+                $checkbox.prop('checked', !value); // Revert on error
             },
             complete: function() {
-                // Re-enable the checkbox
-                $checkbox.prop('disabled', false);
+                $checkbox.prop('disabled', false); // Re-enable checkbox
             }
         });
     });
 
-    
-   $('#test-unused-css').on('click', function() {
+    // Test unused CSS functionality
+    $('#test-unused-css').on('click', function() {
         const $button = $(this);
         const $results = $('#test-results');
         const $status = $('.test-status');
@@ -116,12 +84,11 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 console.log('Response:', response); // Debug log
-                
                 if (response.success) {
                     $status
                         .addClass('success')
                         .html(`Successfully analyzed CSS for <strong>${testUrl}</strong>`);
-                    
+
                     response.data.forEach(function(result) {
                         const reduction = ((result.originalSize - result.optimizedSize) / result.originalSize * 100).toFixed(1);
                         const row = `
@@ -163,11 +130,8 @@ jQuery(document).ready(function($) {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-});
-  
-  
-  
-    // Handle clear cache button
+
+    // Clear cache button functionality
     $('.macp-clear-cache').on('click', function(e) {
         e.preventDefault();
         const $button = $(this);
@@ -197,4 +161,4 @@ jQuery(document).ready(function($) {
             }
         });
     });
-}); // Closing jQuery(document).ready
+});

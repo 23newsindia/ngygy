@@ -21,6 +21,11 @@ require_once MACP_PLUGIN_DIR . 'includes/class-macp-debug.php';
 require_once MACP_PLUGIN_DIR . 'includes/class-macp-filesystem.php';
 require_once MACP_PLUGIN_DIR . 'includes/class-macp-url-helper.php';
 
+// Load CSS test classes
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-controller.php';
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-url-validator.php';
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-results.php';
+
 
 // Add to the existing requires section:
 require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-controller.php';
@@ -56,6 +61,8 @@ require_once MACP_PLUGIN_DIR . 'includes/css/utils/class-macp-css-optimizer.php'
 require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-config.php';
 require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-extractor.php';
 require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-minifier.php';
+
+
 
 
 
@@ -103,6 +110,9 @@ require_once MACP_PLUGIN_DIR . 'includes/lazy-load/class-macp-lazy-load-processo
 require_once MACP_PLUGIN_DIR . 'includes/lazy-load/class-macp-lazy-load.php';
 
 require_once MACP_PLUGIN_DIR . 'includes/js/class-macp-script-loader.php';
+
+
+
 
 // Include the main plugin class last
 require_once MACP_PLUGIN_DIR . 'includes/class-macp-plugin.php';

@@ -18,30 +18,10 @@ if (file_exists(MACP_PLUGIN_DIR . 'vendor/autoload.php')) {
 
 
 
-require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-ajax-handler.php';
-require_once MACP_PLUGIN_DIR . 'includes/css/utils/class-macp-url-validator.php';
-
-
-// Initialize CSS Test Ajax Handler in the plugin's init method
-$css_test_handler = new MACP_CSS_Test_Ajax_Handler();
-
-
 // Load utility classes first
 require_once MACP_PLUGIN_DIR . 'includes/class-macp-debug.php';
 require_once MACP_PLUGIN_DIR . 'includes/class-macp-filesystem.php';
 require_once MACP_PLUGIN_DIR . 'includes/class-macp-url-helper.php';
-
-// Load CSS test classes
-require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-controller.php';
-require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-url-validator.php';
-require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-results.php';
-
-
-// Add to the existing requires section:
-require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-controller.php';
-require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-url-validator.php';
-require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-results.php';
-
 
 
 // Load Redis classes
@@ -71,9 +51,19 @@ require_once MACP_PLUGIN_DIR . 'includes/css/utils/class-macp-css-optimizer.php'
 require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-config.php';
 require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-extractor.php';
 require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-minifier.php';
+// require_once MACP_PLUGIN_DIR . 'includes/css/class-macp-css-optimizer.php'; // Add this line
 
 
 
+// Then load the test classes
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-controller.php';
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-url-validator.php';
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-results.php';
+require_once MACP_PLUGIN_DIR . 'includes/css/test/class-macp-css-test-ajax-handler.php'; 
+
+
+// Initialize CSS Test Ajax Handler in the plugin's init method
+$css_test_handler = new MACP_CSS_Test_Ajax_Handler();
 
 
 // Load JavaScript optimization classes

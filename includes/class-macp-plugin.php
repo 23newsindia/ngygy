@@ -62,6 +62,11 @@ class MACP_Plugin {
     $this->admin = new MACP_Admin($this->redis);
     $this->admin_bar = new MACP_Admin_Bar();
     $this->script_handler = new MACP_Script_Handler();
+      
+     // Initialize CSS optimizer if enabled
+    if (get_option('macp_remove_unused_css', 0)) {
+        $css_optimizer = new MACP_CSS_Optimizer();
+    }
     
     // Initialize Critical CSS
     $this->critical_css = new MACP_Critical_CSS($this->settings_manager);
